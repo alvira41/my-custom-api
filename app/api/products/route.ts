@@ -1,9 +1,18 @@
-// app/api/products/route.ts
-
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { corsHeaders, withCors } from "@/lib/cors";
 
 export const dynamic = "force-dynamic";
+
+// ==========================================
+// OPTIONS: CORS Preflight
+// ==========================================
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
 // ==========================================
 // GET: Ambil Semua Produk
@@ -18,34 +27,40 @@ export async function GET() {
     if (error) {
       console.error("GET /api/products error:", error);
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gagal mengambil data produk dari Supabase",
-          error_message: error.message,
-          error_code: error.code,
-        },
-        { status: 500 }
+      return withCors(
+        NextResponse.json(
+          {
+            success: false,
+            message: "Gagal mengambil data produk dari Supabase",
+            error_message: error.message,
+            error_code: error.code,
+          },
+          { status: 500 }
+        )
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        count: data?.length ?? 0,
-        data: data ?? [],
-      },
-      { status: 200 }
+    return withCors(
+      NextResponse.json(
+        {
+          success: true,
+          count: data?.length ?? 0,
+          data: data ?? [],
+        },
+        { status: 200 }
+      )
     );
   } catch (error) {
     console.error("GET /api/products server error:", error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Terjadi kesalahan pada server",
-      },
-      { status: 500 }
+    return withCors(
+      NextResponse.json(
+        {
+          success: false,
+          message: "Terjadi kesalahan pada server",
+        },
+        { status: 500 }
+      )
     );
   }
 }
@@ -65,12 +80,14 @@ export async function POST(request: Request) {
     // Validasi nama
     // ==========================================
     if (!name || typeof name !== "string") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Field "name" wajib diisi dan harus berupa text',
-        },
-        { status: 400 }
+      return withCors(
+        NextResponse.json(
+          {
+            success: false,
+            message: 'Field "name" wajib diisi dan harus berupa text',
+          },
+          { status: 400 }
+        )
       );
     }
 
@@ -84,13 +101,15 @@ export async function POST(request: Request) {
       !Number.isFinite(price) ||
       price < 0
     ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            'Field "price" wajib berupa angka dan tidak boleh negatif',
-        },
-        { status: 400 }
+      return withCors(
+        NextResponse.json(
+          {
+            success: false,
+            message:
+              'Field "price" wajib berupa angka dan tidak boleh negatif',
+          },
+          { status: 400 }
+        )
       );
     }
 
@@ -102,13 +121,15 @@ export async function POST(request: Request) {
       !Number.isInteger(stock) ||
       stock < 0
     ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            'Field "stock" harus berupa bilangan bulat dan tidak boleh negatif',
-        },
-        { status: 400 }
+      return withCors(
+        NextResponse.json(
+          {
+            success: false,
+            message:
+              'Field "stock" harus berupa bilangan bulat dan tidak boleh negatif',
+          },
+          { status: 400 }
+        )
       );
     }
 
@@ -128,34 +149,40 @@ export async function POST(request: Request) {
     if (error) {
       console.error("POST /api/products error:", error);
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gagal menambahkan produk ke Supabase",
-          error_message: error.message,
-          error_code: error.code,
-        },
-        { status: 500 }
+      return withCors(
+        NextResponse.json(
+          {
+            success: false,
+            message: "Gagal menambahkan produk ke Supabase",
+            error_message: error.message,
+            error_code: error.code,
+          },
+          { status: 500 }
+        )
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Produk berhasil dibuat!",
-        data,
-      },
-      { status: 201 }
+    return withCors(
+      NextResponse.json(
+        {
+          success: true,
+          message: "Produk berhasil dibuat!",
+          data,
+        },
+        { status: 201 }
+      )
     );
   } catch (error) {
     console.error("POST /api/products server error:", error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Invalid JSON request body",
-      },
-      { status: 400 }
+    return withCors(
+      NextResponse.json(
+        {
+          success: false,
+          message: "Invalid JSON request body",
+        },
+        { status: 400 }
+      )
     );
   }
 }
