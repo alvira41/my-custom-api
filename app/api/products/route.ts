@@ -4,9 +4,9 @@ import { corsHeaders, withCors } from "@/lib/cors";
 
 export const dynamic = "force-dynamic";
 
-// ==========================================
-// OPTIONS: CORS Preflight
-// ==========================================
+// =========================
+// OPTIONS
+// =========================
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -14,9 +14,9 @@ export async function OPTIONS() {
   });
 }
 
-// ==========================================
-// GET: Ambil Semua Produk
-// ==========================================
+// =========================
+// GET ALL PRODUCTS
+// =========================
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
@@ -31,7 +31,7 @@ export async function GET() {
         NextResponse.json(
           {
             success: false,
-            message: "Gagal mengambil data produk dari Supabase",
+            message: "Gagal mengambil data produk",
             error_message: error.message,
             error_code: error.code,
           },
@@ -51,7 +51,7 @@ export async function GET() {
       )
     );
   } catch (error) {
-    console.error("GET /api/products server error:", error);
+    console.error(error);
 
     return withCors(
       NextResponse.json(
@@ -65,9 +65,9 @@ export async function GET() {
   }
 }
 
-// ==========================================
-// POST: Tambah Produk Baru
-// ==========================================
+// =========================
+// POST CREATE PRODUCT
+// =========================
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -76,24 +76,20 @@ export async function POST(request: Request) {
     const price = body.price;
     const stock = body.stock ?? 0;
 
-    // ==========================================
     // Validasi nama
-    // ==========================================
     if (!name || typeof name !== "string") {
       return withCors(
         NextResponse.json(
           {
             success: false,
-            message: 'Field "name" wajib diisi dan harus berupa text',
+            message: 'Field "name" wajib diisi',
           },
           { status: 400 }
         )
       );
     }
 
-    // ==========================================
     // Validasi harga
-    // ==========================================
     if (
       price === undefined ||
       price === null ||
@@ -105,17 +101,14 @@ export async function POST(request: Request) {
         NextResponse.json(
           {
             success: false,
-            message:
-              'Field "price" wajib berupa angka dan tidak boleh negatif',
+            message: 'Field "price" harus berupa angka dan tidak boleh negatif',
           },
           { status: 400 }
         )
       );
     }
 
-    // ==========================================
-    // Validasi stock
-    // ==========================================
+    // Validasi stok
     if (
       typeof stock !== "number" ||
       !Number.isInteger(stock) ||
@@ -125,17 +118,13 @@ export async function POST(request: Request) {
         NextResponse.json(
           {
             success: false,
-            message:
-              'Field "stock" harus berupa bilangan bulat dan tidak boleh negatif',
+            message: 'Field "stock" harus berupa bilangan bulat',
           },
           { status: 400 }
         )
       );
     }
 
-    // ==========================================
-    // Insert ke Supabase
-    // ==========================================
     const { data, error } = await supabaseAdmin
       .from("products")
       .insert({
@@ -153,7 +142,7 @@ export async function POST(request: Request) {
         NextResponse.json(
           {
             success: false,
-            message: "Gagal menambahkan produk ke Supabase",
+            message: "Gagal menambahkan produk",
             error_message: error.message,
             error_code: error.code,
           },
@@ -166,14 +155,14 @@ export async function POST(request: Request) {
       NextResponse.json(
         {
           success: true,
-          message: "Produk berhasil dibuat!",
+          message: "Produk berhasil dibuat",
           data,
         },
         { status: 201 }
       )
     );
   } catch (error) {
-    console.error("POST /api/products server error:", error);
+    console.error(error);
 
     return withCors(
       NextResponse.json(
