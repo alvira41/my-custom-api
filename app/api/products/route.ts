@@ -1,0 +1,161 @@
+// app/api/products/route.ts
+
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
+
+// ==========================================
+// GET: Ambil Semua Produk
+// ==========================================
+export async function GET() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("id, name, price, stock")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("GET /api/products error:", error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gagal mengambil data produk dari Supabase",
+          error_message: error.message,
+          error_code: error.code,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        count: data?.length ?? 0,
+        data: data ?? [],
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET /api/products server error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Terjadi kesalahan pada server",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// ==========================================
+// POST: Tambah Produk Baru
+// ==========================================
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const name = body.name;
+    const price = body.price;
+    const stock = body.stock ?? 0;
+
+    // ==========================================
+    // Validasi nama
+    // ==========================================
+    if (!name || typeof name !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Field "name" wajib diisi dan harus berupa text',
+        },
+        { status: 400 }
+      );
+    }
+
+    // ==========================================
+    // Validasi harga
+    // ==========================================
+    if (
+      price === undefined ||
+      price === null ||
+      typeof price !== "number" ||
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Field "price" wajib berupa angka dan tidak boleh negatif',
+        },
+        { status: 400 }
+      );
+    }
+
+    // ==========================================
+    // Validasi stock
+    // ==========================================
+    if (
+      typeof stock !== "number" ||
+      !Number.isInteger(stock) ||
+      stock < 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Field "stock" harus berupa bilangan bulat dan tidak boleh negatif',
+        },
+        { status: 400 }
+      );
+    }
+
+    // ==========================================
+    // Insert ke Supabase
+    // ==========================================
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .insert({
+        name: name.trim(),
+        price,
+        stock,
+      })
+      .select("id, name, price, stock")
+      .single();
+
+    if (error) {
+      console.error("POST /api/products error:", error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gagal menambahkan produk ke Supabase",
+          error_message: error.message,
+          error_code: error.code,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Produk berhasil dibuat!",
+        data,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("POST /api/products server error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Invalid JSON request body",
+      },
+      { status: 400 }
+    );
+  }
+}
