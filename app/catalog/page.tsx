@@ -1,6 +1,7 @@
 async function getProducts() {
   // Ganti URL domain dengan domain app kamu saat diproduksi
-  const res = await fetch('http://localhost:3000/api/products', {
+  const res = await fetch(
+  'https://my-custom-api-delta.vercel.app/api/products', {
     cache: 'no-store', // Selalu ambil data terbaru
   });
   if (!res.ok) throw new Error('Gagal fetching data');
