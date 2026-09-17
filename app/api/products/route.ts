@@ -51,7 +51,7 @@ export async function GET() {
       )
     );
   } catch (error) {
-    console.error(error);
+    console.error("GET ERROR:", error);
 
     return withCors(
       NextResponse.json(
@@ -76,8 +76,14 @@ export async function POST(request: Request) {
     const price = body.price;
     const stock = body.stock ?? 0;
 
-    // Validasi nama
-    if (!name || typeof name !== "string") {
+    // =========================
+    // VALIDASI NAMA
+    // =========================
+    if (
+      !name ||
+      typeof name !== "string" ||
+      name.trim().length === 0
+    ) {
       return withCors(
         NextResponse.json(
           {
@@ -89,7 +95,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validasi harga
+    // =========================
+    // VALIDASI HARGA
+    // =========================
     if (
       price === undefined ||
       price === null ||
@@ -101,14 +109,17 @@ export async function POST(request: Request) {
         NextResponse.json(
           {
             success: false,
-            message: 'Field "price" harus berupa angka dan tidak boleh negatif',
+            message:
+              'Field "price" harus berupa angka dan tidak boleh negatif',
           },
           { status: 400 }
         )
       );
     }
 
-    // Validasi stok
+    // =========================
+    // VALIDASI STOK
+    // =========================
     if (
       typeof stock !== "number" ||
       !Number.isInteger(stock) ||
@@ -118,19 +129,23 @@ export async function POST(request: Request) {
         NextResponse.json(
           {
             success: false,
-            message: 'Field "stock" harus berupa bilangan bulat',
+            message:
+              'Field "stock" harus berupa bilangan bulat dan tidak boleh negatif',
           },
           { status: 400 }
         )
       );
     }
 
+    // =========================
+    // INSERT SUPABASE
+    // =========================
     const { data, error } = await supabaseAdmin
       .from("products")
       .insert({
         name: name.trim(),
-        price,
-        stock,
+        price: price,
+        stock: stock,
       })
       .select("id, name, price, stock")
       .single();
@@ -151,18 +166,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // =========================
+    // SUCCESS
+    // =========================
     return withCors(
       NextResponse.json(
         {
           success: true,
           message: "Produk berhasil dibuat",
-          data,
+          data: data,
         },
         { status: 201 }
       )
     );
   } catch (error) {
-    console.error(error);
+    console.error("POST ERROR:", error);
 
     return withCors(
       NextResponse.json(
